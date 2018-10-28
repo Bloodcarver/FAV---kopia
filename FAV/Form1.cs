@@ -5,12 +5,40 @@ using System.Net;
 using System.Reflection;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.Runtime.InteropServices;
+
 
 
 namespace FAV
 {
     public partial class Form1 : Form
     {
+        [DllImport ("gdi32.dll")]
+        private static extern IntPtr AddFontResourceEx (IntPtr pbfont, uint cbfont, IntPtr pdv, [In] ref uint Pcfonts);
+        FontFamily ff;
+        Font font;
+        private void loadFont()
+        {
+            byte[] fontArray = FAV.Properties.Resources.CenturyGothic;
+            int dataLength = FAV.Properties.Resources.CenturyGothic.Length;
+            IntPtr ptrData= Marshal.AllocCoTaskMem(dataLength);
+            Marshal.Copy(fontArray,0,ptrData,dataLength);
+            uint cFonts = 0;
+            AddFontResourceEx(ptrData, (uint)fontArray.Length, IntPtr.Zero, ref cFonts);
+            PrivateFontCollection pfc = new PrivateFontCollection();
+            pfc.AddMemoryFont(ptrData, dataLength);
+            Marshal.FreeCoTaskMem(ptrData);
+            ff = pfc.Families[0];
+            font = new Font(ff, 15f, FontStyle.Regular);
+         }
+        private void AllocFont(Font f, Control c,float size)
+        {
+            FontStyle fontStyle = FontStyle.Regular;
+            c.Font = new Font(ff, size, fontStyle );
+
+        }
+            
         int iThisImage = 0;
         int iNumImages = 0;
         string sMovieorTV="movie";
@@ -24,7 +52,14 @@ namespace FAV
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-         
+            loadFont();
+            AllocFont(font, this.textBox1, 11);
+            AllocFont(font, this.listBox1 , 11);
+            AllocFont(font, this.button1 , 11);
+            AllocFont(font, this.button2, 11);
+            AllocFont(font, this.button3, 11);
+            AllocFont(font, this.button4, 11);
+
             sMovieorTV = Properties.Settings.Default.MovieorTV ;
             if (sMovieorTV == "tv")
             {
@@ -134,6 +169,8 @@ namespace FAV
             if(File.Exists(Properties.Settings.Default.Path + "\\" + listBox1.SelectedItem.ToString() + "\\folder.jpg"))
             {
                 pictureBox2.ImageLocation = Properties.Settings.Default.Path + "\\" + listBox1.SelectedItem.ToString() + "\\folder.jpg";
+                pictureBox2.Refresh();
+                pictureBox1.ImageLocation = Properties.Settings.Default.Path + "\\" + listBox1.SelectedItem.ToString() + "\\folder.jpg";
             }
             else
             {
